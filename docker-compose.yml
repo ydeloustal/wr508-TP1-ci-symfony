@@ -1,0 +1,16 @@
+# ============================================================================
+#  docker-compose.yml — l'environnement du TP CI/CD Symfony
+# ============================================================================
+#  Un seul service « php » : l'image construite depuis le Dockerfile du
+#  dossier, le projet monté en /srv/app, et une console ouverte pour exécuter
+#  les outils de vérification (d'où le `command: sleep infinity`).
+# ============================================================================
+
+services:
+  php:
+    build: .
+    container_name: ci-symfony
+    working_dir: /srv/app
+    volumes:
+      - ".:/srv/app"
+    command: sleep infinity
