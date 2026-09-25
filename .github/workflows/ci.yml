@@ -1,0 +1,38 @@
+name: Intégration continue
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    name: Vérifications
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+
+      - name: Contrôler le style (PHP-CS-Fixer)
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --no-interaction --using-cache=no
+
+      - name: Contrôler la syntaxe (php -l)
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Analyse statique (PHPStan)
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+      - name: Tests unitaires (PHPUnit)
+        run: ./vendor/bin/phpunit --colors=never --no-progress
+
+      - name: Audit des dépendances (Composer Audit)
+        run: composer audit --format=json --no-interaction
