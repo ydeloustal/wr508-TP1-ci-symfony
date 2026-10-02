@@ -1,0 +1,20 @@
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #f6f7f9;
+    color: #1b1f24;
+}
+
+.conteneur {
+    max-width: 40rem;
+    margin: 3rem auto;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 0.5rem;
+}
+
+.total {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1d4ed8;
+}

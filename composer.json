@@ -11,7 +11,9 @@
         "symfony/dotenv": "8.1.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "8.1.*",
+        "symfony/reprise": "^1.3",
         "symfony/runtime": "8.1.*",
+        "symfony/twig-bundle": "8.1.*",
         "symfony/yaml": "8.1.*",
         "twig/twig": "^3.28"
     },

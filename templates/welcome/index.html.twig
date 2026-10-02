@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ application }}{% endblock %}
+
+{% block body %}
+    <main class="conteneur">
+        <h1>{{ application }}</h1>
+        <p>Le total calculé par le module JavaScript :</p>
+        <p class="total" data-total>?</p>
+    </main>
+{% endblock %}

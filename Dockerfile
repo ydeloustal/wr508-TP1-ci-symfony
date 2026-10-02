@@ -11,7 +11,9 @@ FROM php:8.4-cli
 
 RUN docker-php-ext-install pdo_mysql \
     && apt-get update \
-    && apt-get install -y --no-install-recommends unzip git \
+    && apt-get install -y --no-install-recommends unzip git curl ca-certificates gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 1000 mmi
 
