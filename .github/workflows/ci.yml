@@ -36,3 +36,91 @@ jobs:
 
       - name: Audit des dépendances (Composer Audit)
         run: composer audit --format=json --no-interaction
+
+  build:
+    name: Construction de l'artefact
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv
+
+      - name: Installer Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Installer les dépendances du front
+        run: npm ci
+
+      - name: Compiler la configuration de production
+        run: composer dump-env prod
+        env:
+          APP_ENV: prod
+
+      - name: Installer les dépendances de production
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Construire les assets du front
+        run: npm run build
+
+      - name: Construire l'archive
+        run: |
+          tar -czf "$RUNNER_TEMP/symfony-artifact-r1.tar.gz" \
+            --exclude=./.git \
+            --exclude=./tests \
+            --exclude=./.env \
+            --exclude=./.env.dev \
+            --exclude=./.env.test \
+            --exclude=./var/cache \
+            --exclude=./var/log \
+            --exclude=./node_modules \
+            --exclude=./.secrets \
+            --exclude=./.artifacts \
+            --exclude=./assets \
+            --exclude=./vite.config.js \
+            --exclude=./package.json \
+            --exclude=./package-lock.json \
+            --exclude=./docker-compose.yml \
+            --exclude=./Dockerfile \
+            --exclude=./.php-cs-fixer.dist.php \
+            --exclude=./phpstan.neon \
+            --exclude=./phpunit.xml.dist \
+            --exclude=./README.md \
+            --exclude=./.github \
+            --exclude=./.gitignore \
+            --exclude=./.editorconfig \
+            --exclude=./.phpunit.cache \
+            --exclude=./.php-cs-fixer.cache \
+            --exclude=./bin/phpunit \
+            .
+          cp "$RUNNER_TEMP/symfony-artifact-r1.tar.gz" .
+
+      - name: Tester l'artefact
+        env:
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/smoke"
+          tar -xzf symfony-artifact-r1.tar.gz -C "$RUNNER_TEMP/smoke"
+          php -S 127.0.0.1:8000 -t "$RUNNER_TEMP/smoke/public" > /dev/null 2>&1 &
+          server_pid=$!
+          sleep 1
+          code=$(curl --silent --output /dev/null --write-out "%{http_code}" http://127.0.0.1:8000/welcome)
+          kill "$server_pid"
+          test "$code" = "200"
+
+      - name: Téléverser l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: symfony-artifact
+          path: symfony-artifact-r1.tar.gz

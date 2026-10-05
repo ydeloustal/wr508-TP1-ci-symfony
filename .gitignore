@@ -25,3 +25,7 @@
 ###< symfony/reprise ###
 node_modules/
 public/build/
+.secrets
+.artifacts/
+.secrets
+.artifacts/
