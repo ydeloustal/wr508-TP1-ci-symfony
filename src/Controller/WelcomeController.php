@@ -17,7 +17,7 @@ final class WelcomeController
     public function __invoke(): array
     {
         return [
-            'application' => 'WR508D',
+            'application' => 'WR508D V2.0',
         ];
     }
 }
