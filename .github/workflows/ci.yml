@@ -124,3 +124,52 @@ jobs:
         with:
           name: symfony-artifact
           path: symfony-artifact-r1.tar.gz
+
+  deploy:
+    name: Déploiement
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Télécharger l'artefact
+        uses: actions/download-artifact@v4
+        with:
+          name: symfony-artifact
+
+      - name: Préparer la clé SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Transférer l'artefact
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az -e "ssh -i $HOME/.ssh/deploy_key" \
+            symfony-artifact-r1.tar.gz \
+            "$SSH_USER@$SSH_HOST:/var/www/wr508d/"
+
+      - name: Mettre en service
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" 'bash -s' < deploy/deploy-remote.sh
+
+      - name: Vérifier le service
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          code=$(curl --silent --output /dev/null --write-out "%{http_code}" "http://${SSH_HOST}/welcome")
+          test "$code" = "200"
+  
