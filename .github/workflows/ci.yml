@@ -164,7 +164,8 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" 'bash -s' < deploy/deploy-remote.sh
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
+            "RELEASE_ID=${{ github.run_number }} bash -s" < deploy/deploy-remote.sh
 
       - name: Vérifier le service
         env:
